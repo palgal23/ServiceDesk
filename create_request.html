@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Новая заявка{% endblock %}
+
+{% block content %}
+<h2 class="mb-4" style="font-weight: 600; color: #1a3a5c;">
+    <i class="bi bi-plus-circle"></i> Создание новой заявки
+</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="client_id" class="form-label">Клиент *</label>
+                        <select class="form-select" id="client_id" name="client_id" required>
+                            <option value="">Выберите клиента...</option>
+                            {% for client in clients %}
+                            <option value="{{ client.id }}">{{ client.name }} ({{ client.contact_person }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Описание проблемы *</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required placeholder="Опишите, что случилось..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="priority" class="form-label">Приоритет *</label>
+                            <select class="form-select" id="priority" name="priority" required>
+                                <option value="">Выберите приоритет...</option>
+                                <option value="low">Низкий</option>
+                                <option value="medium" selected>Средний</option>
+                                <option value="high">Высокий</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="engineer_id" class="form-label">Назначить инженера</label>
+                            <select class="form-select" id="engineer_id" name="engineer_id">
+                                <option value="">Выберите инженера...</option>
+                                {% for engineer in engineers %}
+                                <option value="{{ engineer.id }}">{{ engineer.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Создать заявку
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Отмена</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

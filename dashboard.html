@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Панель управления{% endblock %}
+
+{% block content %}
+<h2 class="mb-4" style="font-weight: 600; color: #1a3a5c;">
+    <i class="bi bi-speedometer2"></i> Панель управления
+</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-white" style="background: linear-gradient(135deg, #1a3a5c, #2a5a8c);">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6>Всего заявок</h6>
+                    <h3>{{ requests|length }}</h3>
+                </div>
+                <i class="bi bi-ticket-detailed" style="font-size: 2.5rem; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-white" style="background: linear-gradient(135deg, #e67e22, #f39c12);">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6>В работе</h6>
+                    <h3>{{ requests|selectattr('status', 'equalto', 'in_progress')|list|length }}</h3>
+                </div>
+                <i class="bi bi-gear" style="font-size: 2.5rem; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-white" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6>Решено</h6>
+                    <h3>{{ requests|selectattr('status', 'equalto', 'resolved')|list|length }}</h3>
+                </div>
+                <i class="bi bi-check-circle" style="font-size: 2.5rem; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3 text-white" style="background: linear-gradient(135deg, #c0392b, #e74c3c);">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6>Просрочено</h6>
+                    <h3>{{ expired_count }}</h3>
+                </div>
+                <i class="bi bi-exclamation-triangle" style="font-size: 2.5rem; opacity: 0.5;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Список заявок</h5>
+            {% if current_user.role == 'dispatcher' %}
+            <a href="{{ url_for('create_request') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Новая заявка
+            </a>
+            {% endif %}
+        </div>
+
+        {% if requests %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Клиент</th>
+                        <th>Описание</th>
+                        <th>Приоритет</th>
+                        <th>Статус</th>
+                        <th>SLA (реакция)</th>
+                        <th>SLA (решение)</th>
+                        <th>Исполнитель</th>
+                        <th>Дата создания</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    {% set sla = req.get_sla_info() %}
+                    {% set row_class = '' %}
+                    {% if req.status != 'closed' %}
+                        {% if sla.solution_status == 'expired' or (sla.reaction_status == 'expired' and req.status == 'new') %}
+                            {% set row_class = 'table-danger' %}
+                        {% elif sla.solution_status == 'warning' or sla.reaction_status == 'warning' %}
+                            {% set row_class = 'table-warning' %}
+                        {% endif %}
+                    {% endif %}
+                    <tr class="{{ row_class }}">
+                        <td><strong>#{{ req.id }}</strong></td>
+                        <td>{{ req.client_obj.name }}</td>
+                        <td>{{ req.description[:40] }}{% if req.description|length > 40 %}...{% endif %}</td>
+                        <td>
+                            {% if req.priority == 'high' %}
+                                <span class="badge bg-danger badge-status">Высокий</span>
+                            {% elif req.priority == 'medium' %}
+                                <span class="badge bg-warning text-dark badge-status">Средний</span>
+                            {% else %}
+                                <span class="badge bg-secondary badge-status">Низкий</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if req.status == 'new' %}
+                                <span class="badge bg-info badge-status">Новая</span>
+                            {% elif req.status == 'in_progress' %}
+                                <span class="badge bg-warning text-dark badge-status">В работе</span>
+                            {% elif req.status == 'resolved' %}
+                                <span class="badge bg-success badge-status">Решена</span>
+                            {% elif req.status == 'closed' %}
+                                <span class="badge bg-dark badge-status">Закрыта</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sla.reaction_status == 'ok' %}
+                                <span class="badge bg-success">В срок</span>
+                            {% elif sla.reaction_status == 'warning' %}
+                                <span class="badge bg-warning text-dark">Истекает</span>
+                            {% elif sla.reaction_status == 'expired' %}
+                                <span class="badge bg-danger">Просрочена!</span>
+                            {% elif sla.reaction_status == 'done' %}
+                                <span class="badge bg-secondary">Выполнена</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sla.solution_status == 'ok' %}
+                                <span class="badge bg-success">В срок</span>
+                            {% elif sla.solution_status == 'warning' %}
+                                <span class="badge bg-warning text-dark">Истекает</span>
+                            {% elif sla.solution_status == 'expired' %}
+                                <span class="badge bg-danger">Просрочено!</span>
+                            {% elif sla.solution_status == 'done' %}
+                                <span class="badge bg-secondary">Выполнена</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ req.engineer_obj.full_name if req.engineer_obj else '—' }}</td>
+                        <td>{{ req.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                        <td>
+                            {% if current_user.role != 'manager' %}
+                                {% if current_user.role == 'dispatcher' or (current_user.role == 'engineer' and req.engineer_id == current_user.id) %}
+                                <a href="{{ url_for('change_status', request_id=req.id) }}" class="btn btn-outline-warning btn-sm">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Заявок пока нет.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

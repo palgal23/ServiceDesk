@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Смена статуса заявки №{{ request.id }}{% endblock %}
+
+{% block content %}
+<h2 class="mb-4" style="font-weight: 600; color: #1a3a5c;">
+    <i class="bi bi-arrow-repeat"></i> Смена статуса заявки №{{ request.id }}
+</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">{{ request.client_obj.name }}</h5>
+                <p class="card-text">{{ request.description }}</p>
+                <div class="row">
+                    <div class="col-md-4">
+                        <small class="text-muted">Текущий статус:</small><br>
+                        {% if request.status == 'new' %}
+                            <span class="badge bg-info badge-status">Новая</span>
+                        {% elif request.status == 'in_progress' %}
+                            <span class="badge bg-warning text-dark badge-status">В работе</span>
+                        {% elif request.status == 'resolved' %}
+                            <span class="badge bg-success badge-status">Решена</span>
+                        {% elif request.status == 'closed' %}
+                            <span class="badge bg-dark badge-status">Закрыта</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Приоритет:</small><br>
+                        <strong>{{ request.get_priority_display() }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Исполнитель:</small><br>
+                        <strong>{{ request.engineer_obj.full_name if request.engineer_obj else 'Не назначен' }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="new_status" class="form-label">Новый статус</label>
+                        <select class="form-select" id="new_status" name="new_status" required>
+                            <option value="">Выберите статус...</option>
+                            <option value="new" {% if request.status == 'new' %}disabled{% endif %}>🟢 Новая</option>
+                            <option value="in_progress" {% if request.status == 'in_progress' %}disabled{% endif %}>🟡 В работе</option>
+                            <option value="resolved" {% if request.status == 'resolved' %}disabled{% endif %}>🟢 Решена</option>
+                            <option value="closed" {% if request.status == 'closed' %}disabled{% endif %}>⚫ Закрыта</option>
+                        </select>
+                        <small class="text-muted">Текущий статус выбрать нельзя</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Комментарий</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="2" placeholder="Что сделано, время, материалы..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-arrow-repeat"></i> Изменить статус
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Отмена</a>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5><i class="bi bi-clock-history"></i> История изменений</h5>
+                {% if history_with_users %}
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Было</th>
+                            <th>Стало</th>
+                            <th>Кто</th>
+                            <th>Комментарий</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in history_with_users %}
+                        <tr>
+                            <td>{{ item.history.changed_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>{{ item.history.get_status_display(item.history.old_status) if item.history.old_status else '—' }}</td>
+                            <td>{{ item.history.get_status_display(item.history.new_status) }}</td>
+                            <td>{{ item.user_name }}</td>
+                            <td>{{ item.history.comment if item.history.comment else '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted">История пуста.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

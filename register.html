@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block content %}
+<div style="margin-left: -250px;">
+    <div class="row justify-content-center" style="padding-top: 40px;">
+        <div class="col-md-4">
+            <div class="card p-4">
+                <div class="text-center mb-4">
+                    <i class="bi bi-person-plus" style="font-size: 3rem; color: #1a3a5c;"></i>
+                    <h3 class="mt-2">Регистрация пользователя</h3>
+                </div>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">ФИО</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Логин</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Роль</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="">Выберите роль...</option>
+                            <option value="dispatcher">Диспетчер</option>
+                            <option value="engineer">Инженер</option>
+                            <option value="manager">Руководитель</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-check-lg"></i> Зарегистрировать
+                    </button>
+                </form>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('login') }}" class="text-decoration-none">Уже есть аккаунт? Войти</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}Отчёты{% endblock %}
+
+{% block content %}
+<h2 class="mb-4" style="font-weight: 600; color: #1a3a5c;">
+    <i class="bi bi-graph-up"></i> Отчёты
+</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Тип отчёта</label>
+                <select class="form-select" name="type">
+                    <option value="statuses" {% if report_type == 'statuses' %}selected{% endif %}>По статусам</option>
+                    <option value="engineers" {% if report_type == 'engineers' %}selected{% endif %}>По инженерам</option>
+                    <option value="priorities" {% if report_type == 'priorities' %}selected{% endif %}>По приоритетам</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">С даты</label>
+                <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">По дату</label>
+                <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Применить
+                </button>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <a href="{{ url_for('export_requests', date_from=date_from, date_to=date_to) }}" class="btn btn-success w-100">
+                    <i class="bi bi-download"></i> Экспорт
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card stat-card p-3 text-white" style="background: linear-gradient(135deg, #1a3a5c, #2a5a8c);">
+            <h6>Всего</h6>
+            <h3>{{ total }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card p-3 text-white" style="background: linear-gradient(135deg, #3498db, #5dade2);">
+            <h6>Новых</h6>
+            <h3>{{ new_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card p-3 text-white" style="background: linear-gradient(135deg, #e67e22, #f39c12);">
+            <h6>В работе</h6>
+            <h3>{{ in_progress_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card p-3 text-white" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+            <h6>Решено</h6>
+            <h3>{{ resolved_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card p-3 text-white" style="background: linear-gradient(135deg, #2c3e50, #34495e);">
+            <h6>Закрыто</h6>
+            <h3>{{ closed_count }}</h3>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card stat-card p-3 text-white" style="background: linear-gradient(135deg, #c0392b, #e74c3c);">
+            <h6>Просрочено</h6>
+            <h3>{{ expired_count }}</h3>
+        </div>
+    </div>
+</div>
+
+{% if report_type == 'engineers' %}
+<div class="card">
+    <div class="card-body">
+        <h5>Нагрузка на инженеров</h5>
+        {% if engineer_stats %}
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Инженер</th>
+                    <th>Всего заявок</th>
+                    <th>Закрыто</th>
+                    <th>Просрочено</th>
+                    <th>Эффективность</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for name, stats in engineer_stats.items() %}
+                <tr>
+                    <td><strong>{{ name }}</strong></td>
+                    <td>{{ stats.total }}</td>
+                    <td>{{ stats.closed }}</td>
+                    <td>{{ stats.expired }}</td>
+                    <td>
+                        {% if stats.total > 0 %}
+                            {% set efficiency = (stats.closed / stats.total * 100)|round|int %}
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-success" style="width: {{ efficiency }}%">{{ efficiency }}%</div>
+                            </div>
+                        {% else %}
+                            <span class="text-muted">Нет заявок</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">Нет данных.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% if report_type == 'priorities' %}
+<div class="card">
+    <div class="card-body">
+        <h5>Распределение по приоритетам</h5>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Приоритет</th>
+                    <th>Количество</th>
+                    <th>Доля</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge bg-danger badge-status">Высокий</span></td>
+                    <td>{{ priority_stats.high }}</td>
+                    <td>{% if total > 0 %}{{ (priority_stats.high / total * 100)|round|int }}{% else %}0{% endif %}%</td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-warning text-dark badge-status">Средний</span></td>
+                    <td>{{ priority_stats.medium }}</td>
+                    <td>{% if total > 0 %}{{ (priority_stats.medium / total * 100)|round|int }}{% else %}0{% endif %}%</td>
+                </tr>
+                <tr>
+                    <td><span class="badge bg-secondary badge-status">Низкий</span></td>
+                    <td>{{ priority_stats.low }}</td>
+                    <td>{% if total > 0 %}{{ (priority_stats.low / total * 100)|round|int }}{% else %}0{% endif %}%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if report_type == 'statuses' %}
+<div class="card">
+    <div class="card-body">
+        <h5>Последние заявки</h5>
+        {% if requests %}
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Клиент</th>
+                    <th>Описание</th>
+                    <th>Приоритет</th>
+                    <th>Статус</th>
+                    <th>Исполнитель</th>
+                    <th>Дата</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests[:20] %}
+                <tr>
+                    <td>#{{ req.id }}</td>
+                    <td>{{ req.client_obj.name }}</td>
+                    <td>{{ req.description[:50] }}{% if req.description|length > 50 %}...{% endif %}</td>
+                    <td>
+                        {% if req.priority == 'high' %}<span class="badge bg-danger badge-status">Высокий</span>
+                        {% elif req.priority == 'medium' %}<span class="badge bg-warning text-dark badge-status">Средний</span>
+                        {% else %}<span class="badge bg-secondary badge-status">Низкий</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if req.status == 'new' %}<span class="badge bg-info badge-status">Новая</span>
+                        {% elif req.status == 'in_progress' %}<span class="badge bg-warning text-dark badge-status">В работе</span>
+                        {% elif req.status == 'resolved' %}<span class="badge bg-success badge-status">Решена</span>
+                        {% elif req.status == 'closed' %}<span class="badge bg-dark badge-status">Закрыта</span>{% endif %}
+                    </td>
+                    <td>{{ req.engineer_obj.full_name if req.engineer_obj else '—' }}</td>
+                    <td>{{ req.created_at.strftime('%d.%m.%Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">Нет заявок за выбранный период.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

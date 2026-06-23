@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Настройки SLA{% endblock %}
+
+{% block content %}
+<h2 class="mb-4" style="font-weight: 600; color: #1a3a5c;">
+    <i class="bi bi-sliders"></i> Настройки SLA
+</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted mb-3">Настройка нормативов времени реакции и решения для каждого приоритета. Время указывается в часах (можно дробное, например 0.5 = 30 минут).</p>
+                <form method="POST">
+                    <div class="mb-4 p-3 border rounded">
+                        <h5 class="text-danger">Высокий приоритет</h5>
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label">Время реакции (ч)</label>
+                                <input type="number" step="0.1" class="form-control" name="reaction_high" value="{{ sla_settings.high.reaction }}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Время решения (ч)</label>
+                                <input type="number" step="0.1" class="form-control" name="solution_high" value="{{ sla_settings.high.solution }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4 p-3 border rounded">
+                        <h5 class="text-warning">Средний приоритет</h5>
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label">Время реакции (ч)</label>
+                                <input type="number" step="0.1" class="form-control" name="reaction_medium" value="{{ sla_settings.medium.reaction }}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Время решения (ч)</label>
+                                <input type="number" step="0.1" class="form-control" name="solution_medium" value="{{ sla_settings.medium.solution }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4 p-3 border rounded">
+                        <h5 class="text-secondary">Низкий приоритет</h5>
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label">Время реакции (ч)</label>
+                                <input type="number" step="0.1" class="form-control" name="reaction_low" value="{{ sla_settings.low.reaction }}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Время решения (ч)</label>
+                                <input type="number" step="0.1" class="form-control" name="solution_low" value="{{ sla_settings.low.solution }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check-lg"></i> Сохранить настройки
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
